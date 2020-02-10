@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/main2.css">
+    <link href="https://fonts.googleapis.com/css?family=Comfortaa" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+    <title>Arduino Nano 33 BLE and IMU LSM9DS1 Calibration</title>
+</head>
+<body>
+    <div id="head" >
+        <span id="head-title">Nano33BLE : IMU LSM9DS1 calibration</span>
+        <div id="nav_btns">
+            <button id="calibration_btn" class="nav_btn nav_btn_selected">Calibration</button>
+            <button id="labelizer_btn" class="nav_btn">Labelizer</button>
+            <button id="help_btn" class="nav_btn">Help</button>
+        </div>
+    </div>
+    <div class="app-container">
+        <div id="toolbar">
+            <div style="display: flex; flex:1; align-items: center;">
+                <button class="com-icon-btn bt_btn" id="bt_btn">
+                    <i class="material-icons com_icon" id="bt_icon">&#xe1a7;</i>
+                </button>
+                <span id="bt_connection_status" style="padding-left: 10px;font-size: 16px;font-family: 'Comfortaa', cursive;color: white;" >Disconnected</span>
+            </div>
+            <div id="lock_device_div" style="display: flex; flex:1; flex-direction: row-reverse; align-items: center; justify-content: end;">
+                <button id="lock_device_btn" style="cursor: pointer;background: rgba(0,0,0,0); outline: none;border: none">
+                    <i id="lock_device_btn_icon" style="text-shadow: 0 0 5px rgba(207, 24, 24,1);font-size: 30px;color: rgb(207, 24, 24);" class="material-icons">&#xe899;</i>
+                </button>
+                <span id="device_lock_status" style="cursor: pointer;padding-left: 10px;font-size: 16px;text-shadow: 0 0 5px rgba(207, 24, 24,1);font-family: 'Comfortaa', cursive;color: rgb(207, 24, 24);" >Device Locked</span>
+            </div>
+        </div>
+        <div id="calibration_panel" style="display: block;">
+            <div style="margin-bottom: 10px;margin-top:0px;display: flex; flex-direction: row;">
+                <div class="data-area" style="flex:1;">
+                    <div class="section-header">
+                        <span style="text-shadow: 0 0 8px rgba(255,255,255,.95);">Device Info</span>
+                    </div>
+                    <div style="background:rgba(5,5,5,.6); height: 300px; position:relative; display: flex; flex-direction: column; justify-content: center;align-items: left; width:100%">
+                        <div style="margin-left: 10px;display: flex; flex:1; flex-direction: row; color: white; outline: none; justify-content: space-evenly; align-items: center;">
+                            <div style="flex:2;">LOCAL NAME</div>
+                            <input type="text" id="local_name_input" readonly
+                            style="flex:6;height: 2.5em ;width:100%;border-radius: 5px; background: black; color: white; outline: none; border: none;">
+                        </div>
+                        <div style="margin-left: 10px;display: flex; flex:1; flex-direction: row; color: white; outline: none; justify-content: space-evenly; align-items: center;">
+                            <div style="flex:2;">UUID</div>
+                            <input type="text" id="uuid_input" readonly
+                            style="flex:6;height: 2.5em ;width:100%;border-radius: 5px; background: black; color: white; outline: none; border: none;">
+                        </div>
+                        <div style="margin-left: 10px;display: flex; flex:1; flex-direction: row; color: white; outline: none; justify-content: space-evenly; align-items: center;">
+                            <div style="flex:2;">SERIAL NUMBER</div>
+                            <div style="display: flex;flex:6;height: 2.5em ;flex-direction: row; align-items: center;">
+                                <input type="text" id="serial_number_input" readonly
+                                style="height:100%;flex:8;border-radius: 5px; background: black; color: rgb(255, 255, 255); outline: none; border: none;">
+                                <button class="" style="flex:1;background:rgba(0,0,0,0);outline:none; border: none;"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(0, 89, 255,1);font-size: 30px;color: rgb(0, 225, 255);"> 
+                                    edit
+                                    </i></button>
+                                <button class="" style="flex:1;background:rgba(0,0,0,0);outline:none; border: none;"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(50, 255, 50,1);font-size: 30px;color: rgb(50, 255, 50);">
+                                    check
+                                    </i></button>
+                                <button class="" style="flex:1;background:rgba(0,0,0,0);outline:none; border: none;"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(207, 24, 24,1);font-size: 30px;color: rgb(207, 24, 24);">
+                                    clear
+                                    </i></button>
+                            </div>
+                        </div>                    
+                    </div>
+                </div>
+                <div class="data-area" style="flex:1;">
+                    <div class="section-header">
+                        <span style="text-shadow: 0 0 8px rgba(255,255,255,.95);">Command Prompt</span>
+                    </div>
+                    <div style="background: rgba(5,5,5,.6); height: 300px; position:relative; display: flex; flex-direction: column; align-items: stretch; width:100%; flex-shrink: 0;">
+                        <div id="console" style="display: flex; flex:20; flex-direction: column;  flex-shrink: 0;resize: none; border: none;outline: none; overflow:auto;">
+                        </div>
+                        <div style="width:100%; display: flex; flex:1; flex-direction: row; justify-content: center; align-items: center;flex:1">
+                            <input type="text" id="console_input" 
+                            style="height: 20px;display:flex; flex:5; border-radius: 5px; background: black; color: white; outline: none">
+                            <button id="btn_send_serial" style="height: 100%; display:flex; flex:1; padding:0px; border-radius: 5px; background: #222; color: white; outline: none">
+                                <span style="width:100%; text-align: center;cursor: pointer;">send</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-area">
+                <div class="section-header">
+                    <span style="text-shadow: 0 0 8px rgba(255,255,255,.95);">Device Inertial Sensor</span>
+                </div>
+                <div id="axl-area" class="imu-sensor-area">
+                    <div id="axl-header" class="sensor-header">
+                        <span style="text-shadow: 0 0 4px rgba(255,255,255,.95);">Accelerometer</span>
+                    </div>
+                    <div style="height:200px;display: flex; flex-direction: row;margin-top: 10px;">
+                        <div style="display: flex;flex: 1;flex-direction: column; justify-content: space-between; align-items: center;">
+                            <div style="display:flex; align-items: center; color: white;font-size: 16px;font-family: 'Comfortaa', cursive; flex: 1;">
+                                Axes
+                            </div>
+                            <div style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive; flex: 1;">
+                                X
+                            </div>
+                            <div style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive; flex: 1;">
+                                Y
+                            </div>
+                            <div style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive; flex: 1;">
+                                Z
+                            </div>
+                        </div>
+                        <div  style="display: flex;flex: 1;flex-direction: column; justify-content: space-around; align-items: center;">
+                            <div  style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive; flex: 1;">
+                                Stream
+                            </div>
+                            <div id="stream_axl-0" style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive; flex: 1;">
+                                None
+                            </div>
+                            <div id="stream_axl-1" style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                None
+                            </div>
+                            <div id="stream_axl-2" style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                None
+                            </div>
+                        </div>
+                        <div style="display: flex;flex: 2;flex-direction: column; justify-content: space-around; align-items: center;">
+                            <div style="display:flex;align-items: center;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                Positions
+                            </div>
+                            <div style="display:flex; align-items: center;justify-content:space-around; flex-direction: column; color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <button id="position_btn-xup" class="position_button" onclick="position_btn_clicked(this);">
+                                    X UP
+                                </button>
+                                <button id="position_btn-xdown" class="position_button" onclick="position_btn_clicked(this);">
+                                    X DOWN
+                                </button>
+                            </div>
+                            <div style="display:flex; align-items: center;justify-content: space-around; flex-direction: column; color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <button id="position_btn-yup" class="position_button" onclick="position_btn_clicked(this);">
+                                    Y UP
+                                </button>
+                                <button id="position_btn-ydown" class="position_button" onclick="position_btn_clicked(this);">
+                                    Y DOWN
+                                </button>
+                            </div>
+                            <div style="display:flex; align-items: center;justify-content: space-around; flex-direction: column; color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <button id="position_btn-zup" class="position_button" onclick="position_btn_clicked(this);">
+                                    Z UP
+                                </button>
+                                <button id="position_btn-zdown" class="position_button" onclick="position_btn_clicked(this);">
+                                    Z DOWN
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex;flex: 3;flex-direction: column; justify-content: space-around; align-items: center;">
+                            <div style="display:flex; align-items: center;justify-content: center; flex-direction: column; color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <span>Measured Positions</span>
+                                <span>X | Y | Z</span>
+                            </div>
+                            <div style="width:100%;display:flex; justify-content: space-around;flex-direction: column;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <div id="axl_measured-xup" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>
+                                <div id="axl_measured-xdown" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>                            
+                            </div>
+                            <div style="width:100%;display:flex; justify-content: space-around;flex-direction: column;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <div id="axl_measured-yup" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>
+                                <div id="axl_measured-ydown" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>                            
+                            </div>
+                            <div style="width:100%;display:flex; justify-content: space-around;flex-direction: column;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <div id="axl_measured-zup" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>
+                                <div id="axl_measured-zdown" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>                            
+                            </div>
+                        </div>
+                        <div style="display: flex;flex: 3;flex-direction: column; justify-content: space-around; align-items: center;">
+                            <div style="display:flex; align-items: center;justify-content: center; flex-direction: column; color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <span>Calibration Parameters</span>
+                            </div>
+                            <div style="width:100%;display:flex; justify-content: space-around;flex-direction: column;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <div id="axl_calib_params-0" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>
+                                <div id="axl_calib_params-1" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>                            
+                            </div>
+                            <div style="width:100%;display:flex; justify-content: space-around;flex-direction: column;color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <div id="axl_calib_params-2" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>
+                                <div id="axl_calib_params-3" style="display:flex; flex-direction: row; justify-content: space-between;align-items: center;">
+                                    <div style="flex:1;text-align: center;">None</div>
+                                    <div style="flex:1;text-align: center; ">None</div>
+                                    <div style="flex:1;text-align: center;">None</div>
+                                </div>                            
+                            </div>
+    
+                            <div style="display:flex; align-items: center;justify-content: space-around; flex-direction: column; color: white;font-size: 16px;font-family: 'Comfortaa', cursive;flex: 1;">
+                                <button id="axl_calib_btn" class="calibration_btn" onclick="axl_calib_btn_clicked();">
+                                    Calibrate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>               
+            </div>
+        </div>
+        <div id="labelizer_panel" style="display: None;">
+            <div style="margin-bottom: 10px;margin-top:0px;display: flex; flex-direction: row;">
+                <div class="data-area" style="flex:1;resize: none;">
+                    <div class="section-header" style="flex-direction: row; justify-content: space-between;">
+                        <span style="text-shadow: 0 0 8px rgba(255,255,255,.95);flex:1;">Labels</span>
+                        <div style="display: flex;flex:1;justify-content: flex-end;align-items: center;margin-right: 10px;">
+                            <button id="btn-lab_edit_mode" style="border: none; outline: none;background: rgba(0,0,0,0);"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(0, 89, 255,1);font-size: 30px;color: rgb(0, 225, 255);"> 
+                                edit
+                            </i></button>
+                            <button id="btn-lab_check_mode" style="border: none; outline: none;background: rgba(0,0,0,0);"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(50, 255, 50,1);font-size: 30px;color: rgb(50, 255, 50);"> 
+                                check
+                            </i></button>
+                            <button id="btn-lab_delete_mode" style="border: none; outline: none;background: rgba(0,0,0,0);"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(207, 24, 24,1);font-size: 30px;color: rgb(207, 24, 24);"> 
+                                clear
+                            </i></button>
+                        </div>
+                    </div>                    
+                    <div id="labels_editor" style="width:100%; display:flex; flex:1;resize: none;flex-wrap: wrap; justify-content: space-around;">
+                        <div id="container-btn-add_label" style="transition:.3s;margin-top:1%;margin-bottom:1%;height:100px;width:23%;border:dotted 2px rgb(50,50,50); border-radius: 10px; display: flex;justify-content: center; align-items: center;">
+                            <button id="btn-add_label" style="border: none; outline: none;background: rgba(0,0,0,0);"><i class="sn_btn material-icons" style="text-shadow: 0 0 5px rgba(0, 89, 255,1);font-size: 30px;color: rgb(0, 225, 255);"> 
+                                add_circle_outline
+                            </i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div style="margin-bottom: 10px;margin-top:0px;display: flex; flex-direction: row;"> -->
+                <div style="margin:10px">
+                    <div style="flex-direction: row;width: 100%;height: 45px;background: black;display: flex;justify-content: space-evenly;align-items: center; background: rgba(50,50,50,.5);">
+                        <div class="record_info">
+                            <button id="btn-launch_record" class="record_button" >
+                                <div style="padding-right: 3px;font-size: 16px;">Launch Record</div>
+                                <i id="record_btn_icon" class="sn_btn material-icons"> 
+                                    fiber_manual_record
+                                </i>
+                            </button>
+                        </div>
+                        <div class="record_info">
+                            <span style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">X : </span>
+                            <span id="record-0" style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">None</span>
+                        </div>
+                        <div class="record_info">
+                            <span style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">Y : </span>
+                            <span id="record-1" style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">None</span>
+                        </div>
+                        <div class="record_info">
+                            <span style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">Z : </span>
+                            <span id="record-2" style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">None</span>
+                        </div>                        
+                        <div  class="record_info">
+                            <span style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">Label :</span>
+                            <span id="record_label" style="font-family:'Comfortaa', cursive;font-size: 16px; color: rgb(200,200,200);">None</span>
+                        </div>
+                    </div>
+                    <!-- <div style="flex-direction: row;width: 100%;height: 45px;background: black;display: flex;justify-content: center;align-items: center; background: rgba(50,50,50,.5);">
+                        <div style="flex:1;height:75%;flex-direction: row;justify-content: center;align-items: center;">
+                            <button id="btn-launch_record" class="record_button" >
+                                <div style="padding-right: 3px;font-size: 16px;">Launch Record</div>
+                                <i id="record_btn_icon" class="sn_btn material-icons"> 
+                                    fiber_manual_record
+                                </i>
+                            </button>
+                        </div>
+                    </div> -->
+                </div>
+            <!-- </div> -->
+            <button id="download_btn"> test </button>
+        </div>
+    </div>
+    <script src="./js/script2.js"></script>
+</body>
+</html>
